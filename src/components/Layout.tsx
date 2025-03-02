@@ -33,7 +33,7 @@ const Layout: React.FC = () => {
       <IPInfoBar />
       <AppHeader toggleTheme={toggleTheme} theme={resolvedTheme} />
       
-      <main className="pt-24 md:pt-32 pb-12 md:pb-16 px-3 md:px-4 max-w-screen-xl mx-auto">
+      <main className="pt-28 md:pt-32 pb-12 md:pb-16 px-3 md:px-4 max-w-screen-xl mx-auto">
         <Outlet />
       </main>
       

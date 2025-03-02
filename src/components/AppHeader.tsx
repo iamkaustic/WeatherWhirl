@@ -33,7 +33,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
 
   return (
     <header
-      className={`fixed top-5 left-0 right-0 z-50 ${
+      className={`fixed top-0 left-0 right-0 z-40 mt-7 sm:mt-5 ${
         isScrolled
           ? theme === 'dark'
             ? 'bg-[#111] border-b border-[#222]'

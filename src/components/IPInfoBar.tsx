@@ -36,7 +36,7 @@ const IPInfoBar: React.FC = () => {
   }, []);
 
   return (
-    <div className={`w-full py-1 px-4 text-xs flex flex-wrap justify-center items-center gap-2 md:gap-4 ${
+    <div className={`w-full py-1 px-4 text-xs flex flex-wrap justify-center items-center gap-2 md:gap-4 relative z-50 ${
       isDark ? 'bg-[#222] text-gray-300' : 'bg-gray-100 text-gray-700'
     }`}>
       <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
