@@ -1,69 +1,111 @@
-# Welcome to your Lovable project
+# WeatherWhirl
 
-## Project info
+A modern, responsive weather application that provides real-time weather information and forecasts based on user location or search queries.
 
-**URL**: https://lovable.dev/projects/f171e5a0-fa1d-46de-918d-e6337bbea194
+## About the App
 
-## How can I edit this code?
+WeatherWhirl is a comprehensive weather application that offers:
 
-There are several ways of editing your application.
+- Current weather conditions including temperature, humidity, wind speed, and more
+- Hourly weather forecasts
+- Daily weather forecasts
+- Detailed weather information such as UV index, visibility, and pressure
+- Location-based weather using device geolocation
+- Search functionality to check weather in any location
+- Responsive design that works on desktop and mobile devices
 
-**Use Lovable**
+## Technologies and Tools
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f171e5a0-fa1d-46de-918d-e6337bbea194) and start prompting.
+This project is built with a modern tech stack:
 
-Changes made via Lovable will be committed automatically to this repo.
+- **React**: Frontend library for building user interfaces
+- **TypeScript**: Typed JavaScript for better code quality and developer experience
+- **Vite**: Fast, modern frontend build tool
+- **React Router**: For navigation and routing
+- **TanStack Query (React Query)**: For data fetching, caching, and state management
+- **Tailwind CSS**: Utility-first CSS framework for styling
+- **shadcn/ui**: High-quality UI components built with Radix UI and Tailwind CSS
+- **Framer Motion**: Animation library for React
+- **Capacitor**: For building cross-platform mobile applications
+- **Mapbox GL**: For interactive maps and geolocation features
+- **Recharts**: Composable charting library for React
+- **Zod**: TypeScript-first schema validation
+- **React Hook Form**: Form handling with validation
 
-**Use your preferred IDE**
+## APIs
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **OpenWeatherMap API**: For fetching weather data and forecasts
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Dependencies
 
-Follow these steps:
+### Main Dependencies
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+"dependencies": {
+  "@capacitor/android": "^7.0.1",
+  "@capacitor/cli": "^7.0.1",
+  "@capacitor/core": "^7.0.1",
+  "@capacitor/geolocation": "^7.1.1",
+  "@capacitor/ios": "^7.0.1",
+  "@hookform/resolvers": "^3.9.0",
+  "@radix-ui/react-*": "^1.1.0 - ^2.2.1", // Various Radix UI components
+  "@tanstack/react-query": "^5.56.2",
+  "class-variance-authority": "^0.7.1",
+  "clsx": "^2.1.1",
+  "date-fns": "^3.6.0",
+  "framer-motion": "^12.4.7",
+  "lucide-react": "^0.462.0",
+  "mapbox-gl": "^3.10.0",
+  "next-themes": "^0.3.0",
+  "react": "^18.3.1",
+  "react-dom": "^18.3.1",
+  "react-hook-form": "^7.53.0",
+  "react-router-dom": "^6.26.2",
+  "recharts": "^2.12.7",
+  "tailwind-merge": "^2.5.2",
+  "tailwindcss-animate": "^1.0.7",
+  "zod": "^3.23.8"
+}
 ```
 
-**Edit a file directly in GitHub**
+### Development Dependencies
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+"devDependencies": {
+  "@eslint/js": "^9.9.0",
+  "@tailwindcss/typography": "^0.5.15",
+  "@types/node": "^22.5.5",
+  "@types/react": "^18.3.3",
+  "@types/react-dom": "^18.3.0",
+  "@vitejs/plugin-react-swc": "^3.5.0",
+  "autoprefixer": "^10.4.20",
+  "eslint": "^9.9.0",
+  "postcss": "^8.4.47",
+  "tailwindcss": "^3.4.11",
+  "typescript": "^5.5.3",
+  "vite": "^5.4.1"
+}
+```
 
-**Use GitHub Codespaces**
+## Getting Started
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Start the development server:
+   ```
+   npm run dev
+   ```
 
-## What technologies are used for this project?
+## Building for Production
 
-This project is built with .
+```
+npm run build
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Preview Production Build
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/f171e5a0-fa1d-46de-918d-e6337bbea194) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+```
+npm run preview
