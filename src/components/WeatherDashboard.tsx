@@ -1,73 +1,68 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getWeatherByCoordinates } from "@/utils/openWeatherMapApi";
-import CurrentWeather from "./CurrentWeather";
-import ForecastWeather from "./ForecastWeather";
-import HourlyForecast from "./HourlyForecast";
-import WeatherDetails from "./WeatherDetails";
-import { Loader2, MapPin, Search } from "lucide-react";
+import CurrentWeather from "@/components/CurrentWeather";
+import DailyForecast from "@/components/DailyForecast"; 
+import HourlyForecast from "@/components/HourlyForecast";
+import WeatherDetails from "@/components/WeatherDetails";
+import WeatherAlerts from "@/components/WeatherAlerts";
+import AirQualityIndex from "@/components/AirQualityIndex"; 
+import PreferencesPanel from "@/components/PreferencesPanel"; 
+import TimeDisplay from "@/components/TimeDisplay";
+import { useTheme } from "next-themes";
+import { useUserPreferences } from "@/components/UserPreferencesProvider";
+import { processWeatherAlerts, checkCustomAlerts } from "@/utils/alertService";
+import { convertWeatherDataToUserUnits } from "@/utils/unitConversion";
+import { WeatherAlert, AirQualityData, WeatherLocation } from "@/types/weatherTypes";
+import { 
+  Loader, 
+  MapPin, 
+  Search, 
+  Settings, 
+  Clock, 
+  X,
+  RefreshCw
+} from "lucide-react"; 
 import { toast } from "sonner";
-import { useTheme } from "./ThemeProvider";
 
 // Define the combined weather data interface
 interface CombinedWeatherData {
-  current: {
-    temp: number;
-    feels_like: number;
-    humidity: number;
-    pressure: number;
-    wind_speed: number;
-    visibility: number;
-    uvi: number;
-    sunrise?: number;
-    sunset?: number;
-    weather: {
-      id: number;
-      main: string;
-      description: string;
-      icon: string;
-    }[];
-    dt: number;
-  };
-  daily: {
-    dt: number;
-    temp: {
-      min: number;
-      max: number;
-    };
-    weather: {
-      id: number;
-      main: string;
-      description: string;
-      icon: string;
-    }[];
-  }[];
-  hourly: {
-    dt: number;
-    temp: number;
-    weather: {
-      id: number;
-      main: string;
-      description: string;
-      icon: string;
-    }[];
-  }[];
+  current: any;
+  hourly: any[];
+  daily: any[];
   location: {
     name: string;
     country: string;
+    lat?: number;
+    lon?: number;
   };
 }
 
+// API key for OpenWeatherMap
+const API_KEY = "6648586b2ef719174cf86f64362cdd7a";
+
 const WeatherDashboard: React.FC = () => {
-  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
+  const [location, setLocation] = useState<{
+    lat: number;
+    lon: number;
+    name: string;
+    country?: string;
+    state?: string;
+  } | null>(null);
+  const [weatherData, setWeatherData] = useState<CombinedWeatherData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isGettingLocation, setIsGettingLocation] = useState<boolean>(false);
+  const [permissionDialogOpen, setPermissionDialogOpen] = useState<boolean>(false);
+  const [locationTimeout, setLocationTimeout] = useState<number>(15);
+  const [weatherAlerts, setWeatherAlerts] = useState<WeatherAlert[] | null>(null);
+  const [airQualityData, setAirQualityData] = useState<AirQualityData | null>(null);
+  const [isPreferencesPanelOpen, setIsPreferencesPanelOpen] = useState<boolean>(false);
+  const [userPreferences, setUserPreferences] = useState<any | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const { preferences } = useUserPreferences();
   const { resolvedTheme } = useTheme();
   const locationTimeoutRef = useRef<number | null>(null);
-  const [weatherData, setWeatherData] = useState<CombinedWeatherData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
 
   // Get user's location on component mount if not already set
   useEffect(() => {
@@ -169,29 +164,54 @@ const WeatherDashboard: React.FC = () => {
     }, 100); // Small delay to ensure UI renders first
   };
 
+  // Location timeout countdown
+  useEffect(() => {
+    if (permissionDialogOpen && locationTimeout > 0) {
+      const timer = setTimeout(() => {
+        setLocationTimeout(prev => prev - 1);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    } else if (permissionDialogOpen && locationTimeout === 0) {
+      cancelLocationRequest();
+    }
+  }, [permissionDialogOpen, locationTimeout]);
+
+  // Monitor isLoading state changes
+  useEffect(() => {
+    console.log("isLoading state changed:", isLoading);
+  }, [isLoading]);
+
+  // Monitor weatherData state changes
+  useEffect(() => {
+    console.log("weatherData state changed:", weatherData ? "Data available" : "No data");
+  }, [weatherData]);
+
   // Fetch weather data when location changes
   useEffect(() => {
-    const fetchWeatherData = async () => {
-      if (!location) return;
-      
-      setIsLoading(true);
-      setError(null);
-      
+    if (!location) return;
+    
+    console.log("Fetching weather data for location:", location);
+    setIsLoading(true);
+    
+    // Fetch weather data from OpenWeatherMap API
+    const fetchData = async () => {
       try {
-        // Fetch current weather
-        const currentWeatherResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=6648586b2ef719174cf86f64362cdd7a&units=metric`
+        // Fetch current weather data
+        const currentResponse = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${location.lat}&lon=${location.lon}&appid=${API_KEY}&units=metric`
         );
         
-        if (!currentWeatherResponse.ok) {
-          throw new Error(`Weather API error: ${currentWeatherResponse.status}`);
+        if (!currentResponse.ok) {
+          throw new Error(`Weather API error: ${currentResponse.status}`);
         }
         
-        const currentWeatherData = await currentWeatherResponse.json();
+        const currentData = await currentResponse.json();
+        console.log("Current weather data:", currentData);
         
-        // Fetch 5-day forecast (free tier)
+        // Fetch forecast data
         const forecastResponse = await fetch(
-          `https://api.openweathermap.org/data/2.5/forecast?lat=${location.lat}&lon=${location.lon}&appid=6648586b2ef719174cf86f64362cdd7a&units=metric`
+          `https://api.openweathermap.org/data/2.5/forecast?lat=${location.lat}&lon=${location.lon}&appid=${API_KEY}&units=metric`
         );
         
         if (!forecastResponse.ok) {
@@ -199,108 +219,188 @@ const WeatherDashboard: React.FC = () => {
         }
         
         const forecastData = await forecastResponse.json();
+        console.log("Forecast data:", forecastData);
         
-        // Process the forecast data to get daily and hourly forecasts
-        const hourlyData = forecastData.list.slice(0, 24).map((item: any) => ({
-          dt: item.dt,
-          temp: item.main.temp,
-          weather: item.weather
-        }));
+        // Fetch air quality data
+        const airQualityResponse = await fetch(
+          `https://api.openweathermap.org/data/2.5/air_pollution?lat=${location.lat}&lon=${location.lon}&appid=${API_KEY}`
+        );
         
-        // Group forecast by day and get min/max temps
-        const dailyMap = new Map();
-        forecastData.list.forEach((item: any) => {
-          const date = new Date(item.dt * 1000).toDateString();
-          
-          if (!dailyMap.has(date)) {
-            dailyMap.set(date, {
-              dt: item.dt,
-              temp: {
-                min: item.main.temp,
-                max: item.main.temp
-              },
-              weather: item.weather
-            });
-          } else {
-            const existing = dailyMap.get(date);
-            existing.temp.min = Math.min(existing.temp.min, item.main.temp);
-            existing.temp.max = Math.max(existing.temp.max, item.main.temp);
-            // Keep the weather from the middle of the day if possible
-            const itemHour = new Date(item.dt * 1000).getHours();
-            if (itemHour >= 12 && itemHour <= 15) {
-              existing.weather = item.weather;
-            }
-          }
-        });
+        if (!airQualityResponse.ok) {
+          throw new Error(`Air quality API error: ${airQualityResponse.status}`);
+        }
         
-        const dailyData = Array.from(dailyMap.values()).slice(0, 7);
+        const airQualityData = await airQualityResponse.json();
+        console.log("Air quality data:", airQualityData);
         
-        // Combine the data
-        const combined: CombinedWeatherData = {
-          current: {
-            temp: currentWeatherData.main.temp,
-            feels_like: currentWeatherData.main.feels_like,
-            humidity: currentWeatherData.main.humidity,
-            pressure: currentWeatherData.main.pressure,
-            wind_speed: currentWeatherData.wind.speed,
-            visibility: currentWeatherData.visibility,
-            uvi: 0, // Not available in free tier
-            sunrise: currentWeatherData.sys.sunrise,
-            sunset: currentWeatherData.sys.sunset,
-            weather: currentWeatherData.weather,
-            dt: currentWeatherData.dt
-          },
-          daily: dailyData,
-          hourly: hourlyData,
-          location: {
-            name: currentWeatherData.name,
-            country: currentWeatherData.sys.country
-          }
+        // Process the data
+        const processedCurrentData = {
+          temp: currentData.main.temp,
+          feels_like: currentData.main.feels_like,
+          temp_min: currentData.main.temp_min,
+          temp_max: currentData.main.temp_max,
+          humidity: currentData.main.humidity,
+          pressure: currentData.main.pressure,
+          wind_speed: currentData.wind.speed,
+          wind_deg: currentData.wind.deg,
+          weather: currentData.weather[0].main,
+          weather_description: currentData.weather[0].description,
+          weather_icon: currentData.weather[0].icon,
+          clouds: currentData.clouds.all,
+          visibility: currentData.visibility,
+          dt: currentData.dt,
+          sunrise: currentData.sys.sunrise,
+          sunset: currentData.sys.sunset,
         };
         
-        setWeatherData(combined);
-      } catch (err) {
-        console.error("Error fetching weather data:", err);
-        setError(err instanceof Error ? err : new Error("Failed to fetch weather data"));
-        toast.error("Failed to fetch weather data. Please try again later.");
-      } finally {
+        // Process hourly forecast data (next 24 hours)
+        const hourlyForecast = forecastData.list.slice(0, 8).map((item: any) => ({
+          dt: item.dt,
+          temp: item.main.temp,
+          weather: item.weather[0].main,
+          weather_description: item.weather[0].description,
+          weather_icon: item.weather[0].icon,
+          pop: item.pop, // Probability of precipitation
+        }));
+        
+        // Process daily forecast data (next 5 days)
+        const dailyForecast = [];
+        const processedDays = new Set();
+        
+        for (const item of forecastData.list) {
+          const date = new Date(item.dt * 1000);
+          const day = date.toISOString().split('T')[0];
+          
+          if (!processedDays.has(day) && processedDays.size < 5) {
+            processedDays.add(day);
+            
+            // Find the max and min temps for the day
+            const dayItems = forecastData.list.filter((i: any) => {
+              const itemDate = new Date(i.dt * 1000);
+              const itemDay = itemDate.toISOString().split('T')[0];
+              return itemDay === day;
+            });
+            
+            const temps = dayItems.map((i: any) => i.main.temp);
+            const maxTemp = Math.max(...temps);
+            const minTemp = Math.min(...temps);
+            
+            // Use the noon forecast for the day's weather (or the first available)
+            const noonForecast = dayItems.find((i: any) => {
+              const itemDate = new Date(i.dt * 1000);
+              return itemDate.getHours() >= 12 && itemDate.getHours() < 15;
+            }) || dayItems[0];
+            
+            dailyForecast.push({
+              dt: noonForecast.dt,
+              day: day,
+              temp_max: maxTemp,
+              temp_min: minTemp,
+              weather: noonForecast.weather[0].main,
+              weather_description: noonForecast.weather[0].description,
+              weather_icon: noonForecast.weather[0].icon,
+              pop: noonForecast.pop,
+            });
+          }
+        }
+        
+        // Process air quality data
+        const processedAirQuality = {
+          aqi: airQualityData.list[0].main.aqi,
+          components: airQualityData.list[0].components,
+          dt: airQualityData.list[0].dt,
+        };
+        
+        // Set the processed data
+        setWeatherData({
+          location: {
+            name: location.name || currentData.name,
+            country: location.country || currentData.sys.country,
+            lat: location.lat,
+            lon: location.lon,
+          },
+          current: processedCurrentData,
+          hourly: hourlyForecast,
+          daily: dailyForecast,
+        });
+        
+        setAirQualityData(processedAirQuality);
+        
+        // Check for weather alerts
+        const alerts = [];
+        
+        // Add any official weather alerts if available
+        if (currentData.alerts) {
+          alerts.push(...currentData.alerts.map((alert: any) => ({
+            type: 'official',
+            title: alert.event,
+            description: alert.description,
+            start: alert.start,
+            end: alert.end,
+          })));
+        }
+        
+        // Add custom alerts based on weather conditions
+        if (preferences?.alertSettings) {
+          const customAlerts = checkCustomAlerts(processedCurrentData, preferences);
+          if (customAlerts.length > 0) {
+            alerts.push(...customAlerts);
+          }
+        }
+        
+        setWeatherAlerts(alerts);
+        
         setIsLoading(false);
+        console.log("Weather data processing complete");
+        
+      } catch (error) {
+        console.error("Error fetching weather data:", error);
+        setIsLoading(false);
+        setError(error instanceof Error ? error : new Error("Failed to fetch weather data"));
+        toast.error("Error loading weather data. Please try again.");
       }
     };
     
-    fetchWeatherData();
-  }, [location]);
+    fetchData();
+  }, [location, preferences]);
 
   // Handle search form submission
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
-
-    try {
-      // Use the OpenWeatherMap Geocoding API to get coordinates from location name
-      const response = await fetch(
-        `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
-          searchQuery
-        )}&limit=1&appid=6648586b2ef719174cf86f64362cdd7a`
-      );
-      
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        setLocation({
-          lat: data[0].lat,
-          lon: data[0].lon,
-        });
-        
-        // Clear search query
-        setSearchQuery("");
-      } else {
-        toast.error("Location not found. Please try another search term.");
-      }
-    } catch (error) {
-      console.error("Error searching for location:", error);
-      toast.error("Error searching for location. Please try again.");
+    
+    if (!searchQuery.trim()) {
+      toast.error("Please enter a location to search");
+      return;
     }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    // Use OpenWeatherMap Geocoding API to get coordinates
+    fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(searchQuery)}&limit=1&appid=${API_KEY}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Geocoding API error: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Geocoding API response:", data);
+        
+        if (!data || data.length === 0) {
+          throw new Error(`Location "${searchQuery}" not found. Please try a different search term.`);
+        }
+        
+        const { lat, lon, name, country, state } = data[0];
+        setLocation({ lat, lon, name, country, state });
+        // Don't set isLoading to false here, let the useEffect handle it
+      })
+      .catch(err => {
+        console.error("Error fetching location:", err);
+        setIsLoading(false);
+        setError(err);
+        toast.error(err.message || "Failed to find location");
+      });
   };
 
   // Cancel location request
@@ -312,6 +412,15 @@ const WeatherDashboard: React.FC = () => {
     setIsGettingLocation(false);
     setPermissionDialogOpen(false);
     toast.info("Location request cancelled.");
+  };
+
+  // Open location in Google Maps
+  const openInGoogleMaps = () => {
+    if (location && weatherData?.location) {
+      const { name } = weatherData.location;
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&ll=${location.lat},${location.lon}`;
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -345,110 +454,196 @@ const WeatherDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Search form */}
-      <form onSubmit={handleSearch} className="mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 relative">
-            <input
-              type="text"
-              placeholder="Search for a location..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full p-2 pl-10 border ${
-                resolvedTheme === 'dark' ? 'bg-[#222] border-[#333] text-white' : 'bg-white border-gray-200 text-[#111]'
-              }`}
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          </div>
-          <div className="flex gap-2">
-            <button 
-              type="submit" 
-              disabled={!searchQuery.trim()}
-              className={`flex-1 px-4 py-2 uppercase text-sm tracking-wider font-medium ${
-                resolvedTheme === 'dark'
-                  ? 'bg-white text-[#111]'
-                  : 'bg-[#111] text-white'
-              }`}
-            >
-              SEARCH
-            </button>
-            <button 
-              type="button" 
-              onClick={getUserLocation}
-              disabled={isGettingLocation}
-              className={`flex-1 border px-4 py-2 uppercase text-sm tracking-wider font-medium ${
-                resolvedTheme === 'dark'
-                  ? 'border-white text-white'
-                  : 'border-[#111] text-[#111]'
-              }`}
-            >
-              {isGettingLocation ? "LOCATING..." : "MY LOCATION"}
-            </button>
-          </div>
+      {/* Current time and date display */}
+      <div className={`flex justify-between items-center mb-6 py-2 px-4 border-b ${
+        resolvedTheme === 'dark' ? 'border-[#333] text-gray-300' : 'border-gray-200 text-gray-600'
+      }`}>
+        <div className="flex items-center gap-2">
+          <Clock size={16} />
+          <TimeDisplay />
         </div>
-      </form>
+        <div>
+          <span className="text-sm">
+            {new Date().toLocaleDateString(undefined, { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </span>
+        </div>
+      </div>
 
-      {/* Weather data display */}
-      {isLoading ? (
-        <div className={`flex flex-col justify-center items-center py-20 border ${
-          resolvedTheme === 'dark' ? 'border-[#222]' : 'border-[#e5e5e5]'
-        }`}>
-          <Loader2 className="h-12 w-12 text-[#111] dark:text-white mb-4" />
-          <span className="text-lg uppercase tracking-wider">Loading weather data...</span>
+      {/* Header with search */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">
+          WeatherWhirl
+        </h1>
+        
+        {/* Search form */}
+        <div className="w-full md:w-auto">
+          <form onSubmit={handleSearchSubmit} className="flex">
+            <div className="relative flex-grow">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for a city..."
+                className="w-full p-2 pl-8 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
+              />
+              <Search className="absolute left-2 top-2.5 text-gray-400" size={16} />
+            </div>
+            <button
+              type="submit"
+              className={`p-2 rounded-r-md ${
+                isLoading 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-500 hover:bg-blue-600'
+              } text-white`}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                'Search'
+              )}
+            </button>
+          </form>
         </div>
-      ) : weatherData ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className={`md:col-span-2 border p-8 ${
-            resolvedTheme === 'dark' ? 'border-[#222]' : 'border-[#e5e5e5]'
-          }`}>
-            <CurrentWeather 
-              data={weatherData.current} 
-              location={weatherData.location} 
-              coordinates={location}
-            />
-            <div className="mt-8">
-              <h3 className={`text-xl font-medium mb-4 uppercase tracking-wider ${
-                resolvedTheme === 'dark' ? 'text-white' : 'text-[#111]'
-              }`}>
-                HOURLY FORECAST
-              </h3>
-              <HourlyForecast data={weatherData.hourly} isLoading={isLoading} />
+      </div>
+
+      {/* User Preferences Panel */}
+      <PreferencesPanel 
+        isOpen={isPreferencesPanelOpen} 
+        onClose={() => setIsPreferencesPanelOpen(false)} 
+      />
+
+      {/* Main content */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Weather content */}
+        <div className="lg:col-span-12">
+          {isLoading ? (
+            <div className="flex flex-col justify-center items-center h-64 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-300">Loading weather data...</p>
             </div>
-          </div>
-          <div>
-            <div className={`border p-4 mb-6 ${
-              resolvedTheme === 'dark' ? 'border-[#222]' : 'border-[#e5e5e5]'
-            }`}>
-              <h3 className={`text-sm font-medium mb-2 uppercase tracking-wider ${
-                resolvedTheme === 'dark' ? 'text-white' : 'text-[#111]'
-              }`}>
-                7-DAY FORECAST
-              </h3>
-              <ForecastWeather data={weatherData.daily} />
+          ) : error ? (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6">
+              <h3 className="text-red-800 dark:text-red-400 font-medium mb-2">Error</h3>
+              <p className="text-red-700 dark:text-red-300">{error.message}</p>
+              <button
+                onClick={() => setError(null)}
+                className="mt-4 bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200 px-4 py-2 rounded-md text-sm hover:bg-red-200 dark:hover:bg-red-800"
+              >
+                Dismiss
+              </button>
             </div>
-            <div className={`border p-4 ${
-              resolvedTheme === 'dark' ? 'border-[#222]' : 'border-[#e5e5e5]'
-            }`}>
-              <h3 className={`text-sm font-medium mb-2 uppercase tracking-wider ${
-                resolvedTheme === 'dark' ? 'text-white' : 'text-[#111]'
-              }`}>
-                WEATHER DETAILS
-              </h3>
-              <WeatherDetails data={weatherData.current} />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className={`text-center py-20 border ${
-          resolvedTheme === 'dark' ? 'border-[#222] text-gray-300' : 'border-[#e5e5e5] text-gray-600'
-        }`}>
-          {location ? (
-            <p className="text-lg">Failed to load weather data. Please try again.</p>
+          ) : weatherData ? (
+            <>
+              {/* Location header */}
+              <div className="flex justify-between items-center mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                <div className="flex items-center">
+                  <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+                    {weatherData.location.name}
+                    {weatherData.location.country && `, ${weatherData.location.country}`}
+                  </h2>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${location?.lat || 0},${location?.lon || 0}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400"
+                    aria-label="View on map"
+                  >
+                    <MapPin size={16} />
+                  </a>
+                </div>
+                <button
+                  onClick={() => {
+                    if (location) {
+                      setIsLoading(true);
+                      setLocation({ ...location });
+                    }
+                  }}
+                  className="text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400"
+                  aria-label="Refresh weather data"
+                >
+                  <RefreshCw size={16} />
+                </button>
+              </div>
+
+              {/* Weather widgets */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                {/* Current Weather */}
+                <div className="md:col-span-2 lg:col-span-1">
+                  <CurrentWeather data={weatherData.current} isLoading={isLoading} units={preferences.units} />
+                </div>
+
+                {/* Hourly Forecast */}
+                <div className="lg:col-span-2">
+                  <HourlyForecast data={weatherData.hourly} isLoading={isLoading} units={preferences.units} />
+                </div>
+              </div>
+
+              {/* Daily Forecast */}
+              <div className="mb-6">
+                <DailyForecast data={weatherData.daily} isLoading={isLoading} units={preferences.units} />
+              </div>
+
+              {/* Weather Details and Air Quality */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <WeatherDetails data={weatherData.current} units={preferences.units} isLoading={isLoading} />
+                {airQualityData && <AirQualityIndex airQuality={airQualityData} isLoading={isLoading} />}
+              </div>
+
+              {/* Weather Alerts */}
+              {weatherAlerts && weatherAlerts.length > 0 && (
+                <div className="mb-6">
+                  <WeatherAlerts alerts={weatherAlerts} isLoading={isLoading} />
+                </div>
+              )}
+            </>
           ) : (
-            <p className="text-lg">Please search for a location or allow location access to see weather data.</p>
+            <div className="flex flex-col justify-center items-center h-64 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                Welcome to WeatherWhirl
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Search for a location to get started
+              </p>
+              <div className="flex space-x-2 mt-4">
+                <button
+                  onClick={() => {
+                    setSearchQuery("London");
+                    handleSearchSubmit({ preventDefault: () => {} } as React.FormEvent<HTMLFormElement>);
+                  }}
+                  className="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800"
+                >
+                  Try London
+                </button>
+                <button
+                  onClick={() => {
+                    setSearchQuery("New York");
+                    handleSearchSubmit({ preventDefault: () => {} } as React.FormEvent<HTMLFormElement>);
+                  }}
+                  className="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800"
+                >
+                  Try New York
+                </button>
+                <button
+                  onClick={() => {
+                    setSearchQuery("Tokyo");
+                    handleSearchSubmit({ preventDefault: () => {} } as React.FormEvent<HTMLFormElement>);
+                  }}
+                  className="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800"
+                >
+                  Try Tokyo
+                </button>
+              </div>
+            </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

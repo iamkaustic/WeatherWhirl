@@ -1,21 +1,18 @@
 import React from "react";
-import { useTheme } from "./ThemeProvider";
-import WeatherAnimation from "./WeatherAnimation";
+import { useTheme } from "next-themes";
 import { MapPin } from "lucide-react";
+import { WeatherUnits } from "@/types/weatherTypes";
 
 interface CurrentWeatherProps {
   data: {
     temp: number;
     feels_like: number;
-    weather: {
-      id: number;
-      main: string;
-      description: string;
-      icon: string;
-    }[];
+    weather: string;
+    weather_description: string;
+    weather_icon: string;
     dt: number;
   };
-  location: {
+  location?: {
     name: string;
     country: string;
   };
@@ -23,140 +20,111 @@ interface CurrentWeatherProps {
     lat: number;
     lon: number;
   };
+  onOpenGoogleMaps?: () => void;
+  isLoading?: boolean;
+  units?: WeatherUnits;
 }
 
 // Weather condition color mapping
-const getWeatherColor = (weatherId: number, isDark: boolean): string => {
+const getWeatherColor = (weather: string, isDark: boolean): string => {
   // Thunderstorm
-  if (weatherId >= 200 && weatherId < 300) {
+  if (weather === 'Thunderstorm') {
     return isDark ? '#a090fb' : '#6c5ce7';
   }
   // Rain or Drizzle
-  if ((weatherId >= 300 && weatherId < 400) || (weatherId >= 500 && weatherId < 600)) {
+  if (weather === 'Rain' || weather === 'Drizzle') {
     return isDark ? '#73c0ff' : '#0984e3';
   }
   // Snow
-  if (weatherId >= 600 && weatherId < 700) {
+  if (weather === 'Snow') {
     return isDark ? '#b8e9ff' : '#81ecec';
   }
   // Atmosphere (fog, mist, etc.)
-  if (weatherId >= 700 && weatherId < 800) {
+  if (['Mist', 'Smoke', 'Haze', 'Dust', 'Fog', 'Sand', 'Ash', 'Squall', 'Tornado'].includes(weather)) {
     return isDark ? '#b2bec3' : '#636e72';
   }
   // Clear
-  if (weatherId === 800) {
+  if (weather === 'Clear') {
     return isDark ? '#ffeaa7' : '#fdcb6e';
   }
   // Clouds
-  if (weatherId > 800 && weatherId < 900) {
+  if (weather === 'Clouds') {
     return isDark ? '#dfe6e9' : '#74b9ff';
   }
   
   return isDark ? '#dfe6e9' : '#2d3436';
 };
 
-const CurrentWeather: React.FC<CurrentWeatherProps> = ({ data, location, coordinates }) => {
+const CurrentWeather: React.FC<CurrentWeatherProps> = ({ 
+  data, 
+  location, 
+  coordinates, 
+  onOpenGoogleMaps,
+  isLoading = false,
+  units
+}) => {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   
-  // Format date
-  const date = new Date(data.dt * 1000);
-  const formattedDate = date.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-  
-  // Get weather icon URL - use colored version
-  const iconUrl = `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`;
-  
-  // Get weather-specific color
-  const weatherColor = getWeatherColor(data.weather[0].id, isDark);
-  
-  // Create Google Maps URL based on location name if coordinates are not available
-  const googleMapsUrl = coordinates 
-    ? `https://www.google.com/maps?q=${coordinates.lat},${coordinates.lon}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${location.name}, ${location.country}`)}`;
-  
+  // Format date from timestamp
+  const formatDate = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Get temperature unit symbol
+  const getTempUnit = (): string => {
+    if (!units) return '°C';
+    return units.temperature === 'fahrenheit' ? '°F' : '°C';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="flex flex-col items-center text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading current weather...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative">
-      {/* Weather animation */}
-      <WeatherAnimation 
-        weatherId={data.weather[0].id} 
-        weatherMain={data.weather[0].main} 
-      />
-      
-      <div className="relative z-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className={`text-2xl md:text-3xl font-bold uppercase tracking-wider ${
-                isDark ? 'text-white' : 'text-[#111]'
-              }`}>
-                {location.name}, {location.country}
-              </h2>
-              <a 
-                href={googleMapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center"
-                title="View on Google Maps"
-              >
-                <MapPin 
-                  size={18} 
-                  className="hover:scale-110 transition-transform" 
-                  style={{ color: weatherColor }}
-                />
-              </a>
-            </div>
-            <p className={`text-base md:text-lg ${
-              isDark ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              {formattedDate}
-            </p>
-          </div>
-          <div 
-            className="mt-1 md:mt-0 text-base md:text-lg uppercase font-semibold px-3 py-1 rounded-full"
-            style={{ 
-              backgroundColor: isDark ? `${weatherColor}30` : `${weatherColor}20`,
-              color: weatherColor
-            }}
-          >
-            {data.weather[0].main}
-          </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="flex flex-col items-center text-center mb-4">
+        <div className="flex items-center mb-2">
+          <img 
+            src={`https://openweathermap.org/img/wn/${data.weather_icon}@2x.png`}
+            alt={data.weather_description}
+            className="w-20 h-20"
+          />
         </div>
         
-        <div className="flex flex-col sm:flex-row items-center">
-          <div className="flex items-center mr-0 sm:mr-8 mb-2 sm:mb-0">
-            <div 
-              className="relative flex items-center justify-center"
-              style={{ 
-                width: '80px', 
-                height: '80px',
-                background: `radial-gradient(circle, ${weatherColor}40 0%, transparent 70%)`,
-                borderRadius: '50%'
-              }}
-            >
-              <img 
-                src={iconUrl} 
-                alt={data.weather[0].description} 
-                className="w-20 h-20 md:w-24 md:h-24 drop-shadow-lg"
-                style={{ filter: 'saturate(1.5) contrast(1.1)' }}
-              />
-            </div>
-            <div 
-              className="text-5xl md:text-7xl font-bold ml-2"
-              style={{ color: weatherColor }}
-            >
-              {Math.round(data.temp)}°
-            </div>
-          </div>
-          <div className={`text-base md:text-lg ${
-            isDark ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Feels like <span style={{ color: weatherColor }}>{Math.round(data.feels_like)}°</span>
-          </div>
-        </div>
+        <h2 className="text-4xl font-bold text-gray-900 dark:text-white">
+          {Math.round(data.temp)}{getTempUnit()}
+        </h2>
+        
+        <p className="text-lg text-gray-600 dark:text-gray-300 mt-1">
+          Feels like {Math.round(data.feels_like)}{getTempUnit()}
+        </p>
+        
+        <p 
+          className="text-lg font-medium mt-1"
+          style={{ color: getWeatherColor(data.weather, isDark) }}
+        >
+          {data.weather_description.charAt(0).toUpperCase() + data.weather_description.slice(1)}
+        </p>
+        
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+          {formatDate(data.dt)}
+        </p>
       </div>
     </div>
   );

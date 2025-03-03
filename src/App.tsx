@@ -7,6 +7,7 @@ import NotFound from "./pages/NotFound";
 import ThemeProvider from "./components/ThemeProvider";
 import Layout from "./components/Layout";
 import { BackgroundColorProvider } from "./components/BackgroundColorProvider";
+import { UserPreferencesProvider } from "./components/UserPreferencesProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,21 +20,23 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <BackgroundColorProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Index />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </BackgroundColorProvider>
-    </ThemeProvider>
+    <UserPreferencesProvider>
+      <ThemeProvider>
+        <BackgroundColorProvider>
+          <TooltipProvider>
+            <Toaster />
+            <BrowserRouter>
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </BackgroundColorProvider>
+      </ThemeProvider>
+    </UserPreferencesProvider>
   </QueryClientProvider>
 );
 
