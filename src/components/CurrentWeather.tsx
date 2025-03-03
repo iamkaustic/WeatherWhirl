@@ -1,6 +1,7 @@
 import React from "react";
 import { useTheme } from "./ThemeProvider";
 import WeatherAnimation from "./WeatherAnimation";
+import { MapPin } from "lucide-react";
 
 interface CurrentWeatherProps {
   data: {
@@ -17,6 +18,10 @@ interface CurrentWeatherProps {
   location: {
     name: string;
     country: string;
+  };
+  coordinates?: {
+    lat: number;
+    lon: number;
   };
 }
 
@@ -50,7 +55,7 @@ const getWeatherColor = (weatherId: number, isDark: boolean): string => {
   return isDark ? '#dfe6e9' : '#2d3436';
 };
 
-const CurrentWeather: React.FC<CurrentWeatherProps> = ({ data, location }) => {
+const CurrentWeather: React.FC<CurrentWeatherProps> = ({ data, location, coordinates }) => {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   
@@ -68,6 +73,11 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({ data, location }) => {
   // Get weather-specific color
   const weatherColor = getWeatherColor(data.weather[0].id, isDark);
   
+  // Create Google Maps URL based on location name if coordinates are not available
+  const googleMapsUrl = coordinates 
+    ? `https://www.google.com/maps?q=${coordinates.lat},${coordinates.lon}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${location.name}, ${location.country}`)}`;
+  
   return (
     <div className="relative">
       {/* Weather animation */}
@@ -79,11 +89,26 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({ data, location }) => {
       <div className="relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6">
           <div>
-            <h2 className={`text-2xl md:text-3xl font-bold uppercase tracking-wider ${
-              isDark ? 'text-white' : 'text-[#111]'
-            }`}>
-              {location.name}, {location.country}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className={`text-2xl md:text-3xl font-bold uppercase tracking-wider ${
+                isDark ? 'text-white' : 'text-[#111]'
+              }`}>
+                {location.name}, {location.country}
+              </h2>
+              <a 
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center"
+                title="View on Google Maps"
+              >
+                <MapPin 
+                  size={18} 
+                  className="hover:scale-110 transition-transform" 
+                  style={{ color: weatherColor }}
+                />
+              </a>
+            </div>
             <p className={`text-base md:text-lg ${
               isDark ? 'text-gray-300' : 'text-gray-600'
             }`}>

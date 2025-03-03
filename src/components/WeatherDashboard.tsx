@@ -401,7 +401,11 @@ const WeatherDashboard: React.FC = () => {
           <div className={`md:col-span-2 border p-8 ${
             resolvedTheme === 'dark' ? 'border-[#222]' : 'border-[#e5e5e5]'
           }`}>
-            <CurrentWeather data={weatherData.current} location={weatherData.location} />
+            <CurrentWeather 
+              data={weatherData.current} 
+              location={weatherData.location} 
+              coordinates={location}
+            />
             <div className="mt-8">
               <h3 className={`text-xl font-medium mb-4 uppercase tracking-wider ${
                 resolvedTheme === 'dark' ? 'text-white' : 'text-[#111]'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -12,20 +12,8 @@ interface AppHeaderProps {
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -33,31 +21,29 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 mt-7 sm:mt-5 ${
-        isScrolled
-          ? theme === 'dark'
-            ? 'bg-[#111] border-b border-[#222]'
-            : 'bg-white border-b border-[#e5e5e5]'
-          : 'bg-transparent'
+      className={`fixed top-0 left-0 right-0 z-40 ${
+        theme === 'dark'
+          ? 'bg-[#111] border-b border-[#222]'
+          : 'bg-white border-b border-[#e5e5e5]'
       }`}
     >
-      <div className="container mx-auto px-4 max-w-screen-xl">
-        <div className="flex items-center justify-between h-16 md:h-24">
-          <a href="/" className="flex items-center gap-2 md:gap-3" style={{ cursor: 'pointer' }}>
-            <div className="w-16 h-16 md:w-24 md:h-24">
+      <div className="container mx-auto px-3 max-w-screen-xl">
+        <div className="flex items-center justify-between h-12 md:h-16">
+          <a href="/" className="flex items-center gap-1 md:gap-2" style={{ cursor: 'pointer' }}>
+            <div className="w-10 h-10 md:w-14 md:h-14">
               <Lottie 
                 animationData={weatherAnimation} 
                 loop={true} 
                 style={{ width: '100%', height: '100%' }}
               />
             </div>
-            <span className={`text-xl md:text-2xl font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+            <span className={`text-lg md:text-xl font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
               WeatherWhirl
             </span>
           </a>
 
           {/* Desktop Controls */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <BackgroundColorPicker />
             <Button
               variant="ghost"
@@ -67,7 +53,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
                 theme === 'dark' ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
               }`}
             >
-              {theme === 'dark' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
           </div>
 
@@ -81,7 +67,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
                 theme === 'dark' ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
               }`}
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
@@ -89,11 +75,11 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div 
-            className={`md:hidden py-4 px-2 ${
+            className={`md:hidden py-3 px-2 ${
               theme === 'dark' ? 'bg-[#111] border-t border-[#222]' : 'bg-white border-t border-[#e5e5e5]'
             }`}
           >
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-3">
               <BackgroundColorPicker />
               <Button
                 variant="ghost"
@@ -104,13 +90,13 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
               >
                 {theme === 'dark' ? (
                   <>
-                    <Sun className="h-5 w-5" />
-                    <span>Switch to Light Mode</span>
+                    <Sun className="h-4 w-4" />
+                    <span className="text-sm">Switch to Light Mode</span>
                   </>
                 ) : (
                   <>
-                    <Moon className="h-5 w-5" />
-                    <span>Switch to Dark Mode</span>
+                    <Moon className="h-4 w-4" />
+                    <span className="text-sm">Switch to Dark Mode</span>
                   </>
                 )}
               </Button>

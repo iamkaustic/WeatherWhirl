@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchIPInfo } from '../utils/ipInfoService';
 import { useTheme } from './ThemeProvider';
-import { Network } from 'lucide-react';
+import { Network, Clock } from 'lucide-react';
 
 const IPInfoBar: React.FC = () => {
   const [ipInfo, setIpInfo] = useState({
@@ -9,6 +9,7 @@ const IPInfoBar: React.FC = () => {
     isp: ''
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -33,29 +34,58 @@ const IPInfoBar: React.FC = () => {
     };
 
     getIPInfo();
+    
+    // Update time every minute
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 60000);
+    
+    return () => clearInterval(timer);
   }, []);
+  
+  // Format date and time
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString(undefined, { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+  
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString(undefined, { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true
+    });
+  };
 
   return (
-    <div className={`w-full py-1 px-4 text-xs flex flex-wrap justify-center items-center gap-2 md:gap-4 relative z-50 ${
+    <div className={`w-full py-0.5 px-2 text-xs flex flex-wrap justify-center items-center gap-1 md:gap-2 relative z-50 ${
       isDark ? 'bg-[#222] text-gray-300' : 'bg-gray-100 text-gray-700'
     }`}>
-      <div className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-        Your ISP and IP details:
+      <div className="flex items-center gap-1 border-r pr-1 border-gray-400">
+        <Clock className="h-2.5 w-2.5" />
+        <span className="text-xs">{formatTime(currentDateTime)} | {formatDate(currentDateTime)}</span>
+      </div>
+      
+      <div className={`text-xs font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        Your ISP and IP:
       </div>
       
       {isLoading ? (
-        <div className="flex items-center gap-2">
-          <Network className="h-3 w-3" />
-          <span>Loading network information...</span>
+        <div className="flex items-center gap-1">
+          <Network className="h-2.5 w-2.5" />
+          <span className="text-xs">Loading...</span>
         </div>
       ) : (
-        <div className="flex flex-wrap items-center gap-2 md:gap-4">
+        <div className="flex flex-wrap items-center gap-1 md:gap-2">
           <div className="flex items-center gap-1">
-            <Network className="h-3 w-3" />
-            <span>IP: {ipInfo.ip}</span>
+            <Network className="h-2.5 w-2.5" />
+            <span className="text-xs">IP: {ipInfo.ip}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span>ISP: {ipInfo.isp}</span>
+            <span className="text-xs">ISP: {ipInfo.isp}</span>
           </div>
         </div>
       )}

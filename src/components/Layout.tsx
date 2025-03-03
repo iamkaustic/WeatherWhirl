@@ -33,17 +33,17 @@ const Layout: React.FC = () => {
       <IPInfoBar />
       <AppHeader toggleTheme={toggleTheme} theme={resolvedTheme} />
       
-      <main className="pt-28 md:pt-32 pb-12 md:pb-16 px-3 md:px-4 max-w-screen-xl mx-auto">
+      <main className="pt-16 md:pt-20 pb-8 md:pb-12 px-2 md:px-3 max-w-screen-xl mx-auto">
         <Outlet />
       </main>
       
-      <footer className={`py-6 md:py-8 border-t ${
+      <footer className={`py-4 md:py-6 border-t ${
         resolvedTheme === 'dark' ? 'border-[#222]' : 'border-[#e5e5e5]'
       }`}>
-        <div className="container mx-auto px-3 md:px-4 max-w-screen-xl">
-          <div className="text-center text-xs md:text-sm text-gray-500">
+        <div className="container mx-auto px-2 md:px-3 max-w-screen-xl">
+          <div className="text-center text-xs text-gray-500">
             <div>Made with love using AI by iamkaustic</div>
-            <div className="mt-2">User Visits: {userHits}</div>
+            <div className="mt-1">User Visits: {userHits}</div>
           </div>
         </div>
       </footer>
