@@ -58,14 +58,14 @@ const ForecastWeather: React.FC<ForecastWeatherProps> = ({ data }) => {
   };
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       {data.map((day, index) => {
         const weatherColor = getWeatherColor(day.weather[0].id, isDark);
         
         return (
           <div 
             key={day.dt} 
-            className={`flex items-center justify-between py-3 px-2 rounded-lg transition-all duration-200 hover:bg-opacity-10 ${
+            className={`flex items-center justify-between py-1.5 px-1.5 rounded-lg transition-all duration-200 hover:bg-opacity-10 ${
               isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
             } ${
               index < data.length - 1 ? 
@@ -74,7 +74,7 @@ const ForecastWeather: React.FC<ForecastWeatherProps> = ({ data }) => {
             }`}
           >
             <div 
-              className={`w-16 font-medium uppercase ${
+              className={`w-12 font-medium uppercase text-xs ${
                 index === 0 ? 'font-bold' : ''
               }`}
               style={{ color: weatherColor }}
@@ -83,7 +83,7 @@ const ForecastWeather: React.FC<ForecastWeatherProps> = ({ data }) => {
             </div>
             
             <div 
-              className="flex items-center justify-center w-12 h-12 rounded-full"
+              className="flex items-center justify-center w-8 h-8 rounded-full"
               style={{ 
                 background: `radial-gradient(circle, ${weatherColor}30 0%, transparent 70%)`
               }}
@@ -91,19 +91,19 @@ const ForecastWeather: React.FC<ForecastWeatherProps> = ({ data }) => {
               <img 
                 src={`https://openweathermap.org/img/wn/${day.weather[0].icon}.png`}
                 alt={day.weather[0].description}
-                className="w-10 h-10"
+                className="w-8 h-8"
                 style={{ filter: 'saturate(1.5) contrast(1.1)' }}
               />
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <span 
-                className="font-medium text-base"
+                className="font-medium text-sm"
                 style={{ color: weatherColor }}
               >
                 {Math.round(day.temp.max)}°
               </span>
-              <span className={`text-sm ${
+              <span className={`text-xs ${
                 isDark ? 'text-gray-400' : 'text-gray-500'
               }`}>
                 {Math.round(day.temp.min)}°

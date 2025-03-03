@@ -416,20 +416,20 @@ const WeatherDashboard: React.FC = () => {
             </div>
           </div>
           <div>
-            <div className={`border p-8 mb-8 ${
+            <div className={`border p-4 mb-6 ${
               resolvedTheme === 'dark' ? 'border-[#222]' : 'border-[#e5e5e5]'
             }`}>
-              <h3 className={`text-xl font-medium mb-4 uppercase tracking-wider ${
+              <h3 className={`text-sm font-medium mb-2 uppercase tracking-wider ${
                 resolvedTheme === 'dark' ? 'text-white' : 'text-[#111]'
               }`}>
                 7-DAY FORECAST
               </h3>
               <ForecastWeather data={weatherData.daily} />
             </div>
-            <div className={`border p-8 ${
+            <div className={`border p-4 ${
               resolvedTheme === 'dark' ? 'border-[#222]' : 'border-[#e5e5e5]'
             }`}>
-              <h3 className={`text-xl font-medium mb-4 uppercase tracking-wider ${
+              <h3 className={`text-sm font-medium mb-2 uppercase tracking-wider ${
                 resolvedTheme === 'dark' ? 'text-white' : 'text-[#111]'
               }`}>
                 WEATHER DETAILS
