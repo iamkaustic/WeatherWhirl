@@ -4,7 +4,6 @@ import { Toaster } from 'sonner';
 import AppHeader from './AppHeader';
 import { useTheme } from './ThemeProvider';
 import { getUserHits, incrementUserHits } from '@/utils/userHits';
-import IPInfoBar from './IPInfoBar';
 import { useBackgroundColor } from './BackgroundColorProvider';
 
 const Layout: React.FC = () => {
@@ -30,10 +29,9 @@ const Layout: React.FC = () => {
         transition: 'background-color 0.3s ease'
       }}
     >
-      <IPInfoBar />
       <AppHeader toggleTheme={toggleTheme} theme={resolvedTheme} />
       
-      <main className="pt-16 md:pt-20 pb-8 md:pb-12 px-2 md:px-3 max-w-screen-xl mx-auto">
+      <main className="pt-20 md:pt-24 pb-8 md:pb-12 px-2 md:px-3 max-w-screen-xl mx-auto">
         <Outlet />
       </main>
       
