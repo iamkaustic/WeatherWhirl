@@ -1,6 +1,7 @@
 import React from "react";
 import { useTheme } from "next-themes";
 import { WeatherUnits } from "@/types/weatherTypes";
+import { Calendar } from "lucide-react";
 
 interface DailyForecastProps {
   data: {
@@ -54,7 +55,20 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ data, isLoading = false, 
   // Format date from timestamp
   const formatDate = (timestamp: number): string => {
     const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const day = date.getDate();
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    
+    return `${weekday}, ${month} ${day}`;
+  };
+
+  // Check if day is today
+  const isToday = (timestamp: number): boolean => {
+    const today = new Date();
+    const dayDate = new Date(timestamp * 1000);
+    return today.getDate() === dayDate.getDate() && 
+           today.getMonth() === dayDate.getMonth() && 
+           today.getFullYear() === dayDate.getFullYear();
   };
 
   // Get temperature unit symbol
@@ -65,11 +79,25 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ data, isLoading = false, 
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+      <div className="glass-card rounded-xl shadow-md p-6 h-full overflow-hidden relative">
+        {/* Animated gradient background */}
+        <div 
+          className="absolute inset-0 opacity-20 dark:opacity-30 z-0"
+          style={{
+            background: `linear-gradient(-45deg, 
+              ${isDark ? '#4c4177' : '#74b9ff'}, 
+              ${isDark ? '#6c5ce7' : '#a5d8ff'}, 
+              ${isDark ? '#6c5ce7' : '#a5d8ff'}, 
+              ${isDark ? '#4c4177' : '#74b9ff'})`,
+            backgroundSize: '400% 400%',
+            animation: 'gradient-animation 15s ease infinite'
+          }}
+        />
+        
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 relative z-10">
           5-Day Forecast
         </h3>
-        <div className="flex justify-center">
+        <div className="flex justify-center relative z-10">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       </div>
@@ -77,11 +105,25 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ data, isLoading = false, 
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+    <div className="glass-card rounded-xl shadow-md p-6 h-full overflow-hidden relative">
+      {/* Animated gradient background */}
+      <div 
+        className="absolute inset-0 opacity-20 dark:opacity-30 z-0"
+        style={{
+          background: `linear-gradient(-45deg, 
+            ${isDark ? '#4c4177' : '#74b9ff'}, 
+            ${isDark ? '#6c5ce7' : '#a5d8ff'}, 
+            ${isDark ? '#6c5ce7' : '#a5d8ff'}, 
+            ${isDark ? '#4c4177' : '#74b9ff'})`,
+          backgroundSize: '400% 400%',
+          animation: 'gradient-animation 15s ease infinite'
+        }}
+      />
+      
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 relative z-10">
         5-Day Forecast
       </h3>
-      <div className="space-y-2">
+      <div className="space-y-2 relative z-10">
         {data.map((day, index) => (
           <div 
             key={day.dt} 
@@ -90,9 +132,20 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ data, isLoading = false, 
             }`}
           >
             <div className="w-24">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {day.day ? day.day : formatDate(day.dt)}
-              </p>
+              <div className={`flex items-center gap-1 ${
+                isToday(day.dt) 
+                  ? 'text-blue-600 dark:text-blue-400' 
+                  : 'text-gray-700 dark:text-gray-300'
+              }`}>
+                {isToday(day.dt) && <Calendar className="h-3 w-3" />}
+                <p className={`text-sm font-medium ${
+                  isToday(day.dt) 
+                    ? 'font-semibold' 
+                    : ''
+                }`}>
+                  {day.day ? day.day : formatDate(day.dt)}
+                </p>
+              </div>
             </div>
             
             <div className="flex items-center">

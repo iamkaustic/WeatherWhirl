@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'light' | 'dark' | 'auto';
+type Theme = 'light' | 'dark';
 
 interface ThemeContextType {
   theme: Theme;
@@ -27,61 +27,31 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
-  defaultTheme = 'auto',
+  defaultTheme = 'light',
   storageKey = 'weatherwhirl-theme',
 }) => {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  );
+  const [theme, setTheme] = useState<Theme>(() => {
+    const savedTheme = localStorage.getItem(storageKey) as Theme;
+    // Convert 'auto' to 'light' if it was previously saved
+    if (savedTheme === 'auto') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return savedTheme || defaultTheme;
+  });
   
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
-    theme === 'dark' ? 'dark' : 'light'
-  );
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(theme);
 
   // Update the theme when it changes
   useEffect(() => {
     const root = window.document.documentElement;
-    
-    if (theme === 'auto') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-      
-      root.classList.remove('light', 'dark');
-      root.classList.add(systemTheme);
-      setResolvedTheme(systemTheme);
-    } else {
-      root.classList.remove('light', 'dark');
-      root.classList.add(theme);
-      setResolvedTheme(theme);
-    }
-    
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+    setResolvedTheme(theme);
     localStorage.setItem(storageKey, theme);
   }, [theme, storageKey]);
 
-  // Listen for system theme changes if in auto mode
-  useEffect(() => {
-    if (theme !== 'auto') return;
-    
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleChange = () => {
-      const newTheme = mediaQuery.matches ? 'dark' : 'light';
-      document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(newTheme);
-      setResolvedTheme(newTheme);
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme]);
-
   const toggleTheme = () => {
-    setTheme(prev => {
-      if (prev === 'dark') return 'light';
-      if (prev === 'light') return 'dark';
-      return resolvedTheme === 'dark' ? 'light' : 'dark';
-    });
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
   const value = {

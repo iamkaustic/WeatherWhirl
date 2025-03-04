@@ -9,6 +9,7 @@ import WeatherAlerts from "@/components/WeatherAlerts";
 import AirQualityIndex from "@/components/AirQualityIndex"; 
 import PreferencesPanel from "@/components/PreferencesPanel"; 
 import TimeDisplay from "@/components/TimeDisplay";
+import LocationInfo from "@/components/LocationInfo";
 import { useTheme } from "next-themes";
 import { useUserPreferences } from "@/components/UserPreferencesProvider";
 import { processWeatherAlerts, checkCustomAlerts } from "@/utils/alertService";
@@ -21,7 +22,8 @@ import {
   Settings, 
   Clock, 
   X,
-  RefreshCw
+  RefreshCw,
+  Wind
 } from "lucide-react"; 
 import { toast } from "sonner";
 
@@ -307,8 +309,15 @@ const WeatherDashboard: React.FC = () => {
         // Process air quality data
         const processedAirQuality = {
           aqi: airQualityData.list[0].main.aqi,
-          components: airQualityData.list[0].components,
-          dt: airQualityData.list[0].dt,
+          co: airQualityData.list[0].components.co,
+          no: airQualityData.list[0].components.no,
+          no2: airQualityData.list[0].components.no2,
+          o3: airQualityData.list[0].components.o3,
+          so2: airQualityData.list[0].components.so2,
+          pm2_5: airQualityData.list[0].components.pm2_5,
+          pm10: airQualityData.list[0].components.pm10,
+          nh3: airQualityData.list[0].components.nh3,
+          timestamp: airQualityData.list[0].dt * 1000 // Convert to milliseconds for JavaScript Date
         };
         
         // Set the processed data
@@ -454,29 +463,19 @@ const WeatherDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Current time and date display */}
-      <div className={`flex justify-between items-center mb-6 py-2 px-4 border-b ${
-        resolvedTheme === 'dark' ? 'border-[#333] text-gray-300' : 'border-gray-200 text-gray-600'
-      }`}>
-        <div className="flex items-center gap-2">
-          <Clock size={16} />
-          <TimeDisplay />
-        </div>
+      {/* Time and date display */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
         <div>
-          <span className="text-sm">
-            {new Date().toLocaleDateString(undefined, { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </span>
+          <TimeDisplay />
         </div>
       </div>
 
       {/* Header with search */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-4 md:mb-0 flex items-center">
+          <div className="rounded-full bg-primary/10 p-3 mr-3">
+            <Wind className="h-8 w-8 text-primary animate-pulse" />
+          </div>
           WeatherWhirl
         </h1>
         
@@ -489,14 +488,14 @@ const WeatherDashboard: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for a city..."
-                className="w-full p-2 pl-8 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 pl-8 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isLoading}
               />
               <Search className="absolute left-2 top-2.5 text-gray-400" size={16} />
             </div>
             <button
               type="submit"
-              className={`p-2 rounded-r-md ${
+              className={`p-2 ml-2 rounded-full ${
                 isLoading 
                   ? 'bg-gray-400 cursor-not-allowed' 
                   : 'bg-blue-500 hover:bg-blue-600'
@@ -545,8 +544,12 @@ const WeatherDashboard: React.FC = () => {
               <div className="flex justify-between items-center mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
                 <div className="flex items-center">
                   <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+                    <span className="text-gray-600 dark:text-gray-400 font-normal mr-1">You are currently in</span>
                     {weatherData.location.name}
                     {weatherData.location.country && `, ${weatherData.location.country}`}
+                    <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                      ({location?.lat?.toFixed(4)}°, {location?.lon?.toFixed(4)}°)
+                    </span>
                   </h2>
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${location?.lat || 0},${location?.lon || 0}`}
@@ -573,27 +576,45 @@ const WeatherDashboard: React.FC = () => {
               </div>
 
               {/* Weather widgets */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Current Weather */}
-                <div className="md:col-span-2 lg:col-span-1">
+                <div className="col-span-1">
                   <CurrentWeather data={weatherData.current} isLoading={isLoading} units={preferences.units} />
                 </div>
 
-                {/* Hourly Forecast */}
-                <div className="lg:col-span-2">
-                  <HourlyForecast data={weatherData.hourly} isLoading={isLoading} units={preferences.units} />
+                {/* Location Information */}
+                <div className="col-span-1">
+                  <LocationInfo 
+                    name={weatherData.location.name}
+                    country={weatherData.location.country || ''}
+                    lat={location?.lat}
+                    lon={location?.lon}
+                    isLoading={isLoading}
+                  />
                 </div>
               </div>
 
-              {/* Daily Forecast */}
-              <div className="mb-6">
-                <DailyForecast data={weatherData.daily} isLoading={isLoading} units={preferences.units} />
-              </div>
+              {/* 2x2 Grid for Hourly Forecast, 5-Day Forecast, Weather Details, and Air Quality */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Hourly Forecast */}
+                <div className="col-span-1">
+                  <HourlyForecast data={weatherData.hourly} isLoading={isLoading} units={preferences.units} />
+                </div>
 
-              {/* Weather Details and Air Quality */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <WeatherDetails data={weatherData.current} units={preferences.units} isLoading={isLoading} />
-                {airQualityData && <AirQualityIndex airQuality={airQualityData} isLoading={isLoading} />}
+                {/* 5-Day Forecast */}
+                <div className="col-span-1">
+                  <DailyForecast data={weatherData.daily} isLoading={isLoading} units={preferences.units} />
+                </div>
+
+                {/* Weather Details */}
+                <div className="col-span-1">
+                  <WeatherDetails data={weatherData.current} units={preferences.units} isLoading={isLoading} />
+                </div>
+
+                {/* Air Quality */}
+                <div className="col-span-1">
+                  {airQualityData && <AirQualityIndex airQuality={airQualityData} isLoading={isLoading} />}
+                </div>
               </div>
 
               {/* Weather Alerts */}

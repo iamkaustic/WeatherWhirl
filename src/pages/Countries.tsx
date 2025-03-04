@@ -122,7 +122,8 @@ const Countries = () => {
         {selectedCountry && weatherData && (
           <div className="animate-fade-in">
             <h2 className="text-xl font-semibold mb-4">
-              Weather in {weatherData.location.name}, {weatherData.location.country}
+              <span className="text-gray-600 dark:text-gray-400 font-normal">You are currently in</span>{' '}
+              {weatherData.location.name}, {weatherData.location.country}
             </h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

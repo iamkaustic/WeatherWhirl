@@ -15,7 +15,7 @@ export const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts, isLoading 
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-4 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md mb-4 overflow-hidden h-full">
         <div className="flex items-center justify-between p-2 bg-red-100 dark:bg-red-900">
           <div className="flex items-center">
             <AlertTriangle className="text-red-600 dark:text-red-400 mr-2" size={18} />
@@ -62,7 +62,7 @@ export const WeatherAlerts: React.FC<WeatherAlertsProps> = ({ alerts, isLoading 
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-4 overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md mb-4 overflow-hidden h-full">
       <div 
         className="flex items-center justify-between p-2 bg-red-100 dark:bg-red-900 cursor-pointer"
         onClick={() => setExpanded(!expanded)}

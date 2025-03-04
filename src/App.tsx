@@ -8,6 +8,9 @@ import ThemeProvider from "./components/ThemeProvider";
 import Layout from "./components/Layout";
 import { BackgroundColorProvider } from "./components/BackgroundColorProvider";
 import { UserPreferencesProvider } from "./components/UserPreferencesProvider";
+import { BackgroundProvider } from "./components/BackgroundProvider";
+import BlurToggle from "./components/BlurToggle";
+import Search from "./pages/Search";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,19 +25,23 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <UserPreferencesProvider>
       <ThemeProvider>
-        <BackgroundColorProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
-              <Routes>
-                <Route element={<Layout />}>
-                  <Route path="/" element={<Index />} />
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </BackgroundColorProvider>
+        <BackgroundProvider>
+          <BackgroundColorProvider>
+            <TooltipProvider>
+              <Toaster />
+              <BrowserRouter>
+                <Routes>
+                  <Route element={<Layout />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/search" element={<Search />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Route>
+                </Routes>
+              </BrowserRouter>
+              <BlurToggle />
+            </TooltipProvider>
+          </BackgroundColorProvider>
+        </BackgroundProvider>
       </ThemeProvider>
     </UserPreferencesProvider>
   </QueryClientProvider>

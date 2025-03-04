@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MapPin, RefreshCw, Search } from "lucide-react";
@@ -8,6 +8,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import TabNavigation from "@/components/TabNavigation";
 import { getWeatherData } from "@/utils/weatherApi";
 import { getAllCountries, getCitiesByCountry, CityData } from "@/utils/expandedCityData";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const Cities = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,9 +65,9 @@ const Cities = () => {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="container px-4 py-8 mx-auto max-w-5xl">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="rounded-full bg-primary/10 p-2">
-              <MapPin className="h-6 w-6 text-primary" />
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-primary/10 p-3">
+              <MapPin className="h-10 w-10 text-primary animate-pulse" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight">WeatherWhirl</h1>
           </div>
@@ -86,7 +95,7 @@ const Cities = () => {
               <select
                 value={selectedCountry || ""}
                 onChange={(e) => handleCountryChange(e.target.value)}
-                className="w-full p-2 border rounded-md"
+                className="w-full p-2 border rounded-full"
               >
                 {countries.map((country) => (
                   <option key={country} value={country}>
@@ -98,16 +107,41 @@ const Cities = () => {
             
             <div>
               <label className="block text-sm font-medium mb-2">Search Cities</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search cities..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search cities..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 rounded-full"
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-full" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search cities..." value={searchQuery} onValueChange={setSearchQuery} />
+                    <CommandList>
+                      <CommandEmpty>No cities found.</CommandEmpty>
+                      <CommandGroup>
+                        {filteredCities.slice(0, 5).map((city) => (
+                          <CommandItem
+                            key={city.name}
+                            onSelect={() => {
+                              setSearchQuery(city.name);
+                              handleCitySelect(city.name);
+                            }}
+                          >
+                            {city.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
@@ -142,12 +176,27 @@ const Cities = () => {
         {selectedCity && weatherData && (
           <div className="animate-fade-in">
             <h2 className="text-xl font-semibold mb-4">
-              Weather in {weatherData.location.name}, {weatherData.location.country}
+              <span className="text-gray-600 dark:text-gray-400 font-normal">You are currently in</span>{' '}
+              {weatherData.location.name}, {weatherData.location.country}
             </h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Card className="glass-card bg-white/40 p-4">
-                <CardContent className="p-4 flex flex-col items-center text-center">
+              <Card className="glass-card overflow-hidden relative">
+                {/* Animated gradient background */}
+                <div 
+                  className="absolute inset-0 opacity-20 dark:opacity-30 z-0"
+                  style={{
+                    background: `linear-gradient(-45deg, 
+                      ${weatherData.current.is_day ? '#74b9ff' : '#4c4177'}, 
+                      ${weatherData.current.is_day ? '#a5d8ff' : '#6c5ce7'}, 
+                      ${weatherData.current.is_day ? '#a5d8ff' : '#6c5ce7'}, 
+                      ${weatherData.current.is_day ? '#74b9ff' : '#4c4177'})`,
+                    backgroundSize: '400% 400%',
+                    animation: 'gradient-animation 15s ease infinite'
+                  }}
+                />
+                
+                <CardContent className="p-4 flex flex-col items-center text-center relative z-10">
                   <div className="mb-2">
                     <img 
                       src={weatherData.current.condition.icon} 

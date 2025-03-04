@@ -170,17 +170,6 @@ export const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({ isOp
                   <Moon size={16} className="inline mr-1" />
                   Dark
                 </button>
-                <button
-                  className={`flex-1 p-2 text-sm rounded-md ${
-                    preferences.theme === 'auto'
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                  }`}
-                  onClick={() => updateTheme('auto')}
-                >
-                  <Sun size={16} className="inline mr-1" />
-                  Auto
-                </button>
               </div>
             </div>
           )}

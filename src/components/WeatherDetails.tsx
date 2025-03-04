@@ -61,35 +61,35 @@ const WeatherDetails: React.FC<WeatherDetailsProps> = ({ data, units, isLoading 
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 h-full">
       <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-200">Weather Details</h3>
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
           <div className="text-xs uppercase tracking-wider mb-0.5 text-gray-500 dark:text-gray-300">HUMIDITY</div>
           <div className="text-sm font-medium text-gray-900 dark:text-white">{data.humidity}%</div>
         </div>
         
-        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
           <div className="text-xs uppercase tracking-wider mb-0.5 text-gray-500 dark:text-gray-300">PRESSURE</div>
           <div className="text-sm font-medium text-gray-900 dark:text-white">{formatPressure(data.pressure)}</div>
         </div>
         
-        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
           <div className="text-xs uppercase tracking-wider mb-0.5 text-gray-500 dark:text-gray-300">WIND SPEED</div>
           <div className="text-sm font-medium text-gray-900 dark:text-white">{formatWindSpeed(data.wind_speed)}</div>
         </div>
         
-        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
           <div className="text-xs uppercase tracking-wider mb-0.5 text-gray-500 dark:text-gray-300">VISIBILITY</div>
           <div className="text-sm font-medium text-gray-900 dark:text-white">{formatVisibility(data.visibility)}</div>
         </div>
         
-        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
           <div className="text-xs uppercase tracking-wider mb-0.5 text-gray-500 dark:text-gray-300">UV INDEX</div>
           <div className="text-sm font-medium text-gray-900 dark:text-white">{data.uvi}</div>
         </div>
         
-        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded">
+        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
           <div className="text-xs uppercase tracking-wider mb-0.5 text-gray-500 dark:text-gray-300">SUNRISE / SUNSET</div>
           <div className="text-sm font-medium text-gray-900 dark:text-white">
             {formatTime(data.sunrise)} / {formatTime(data.sunset)}

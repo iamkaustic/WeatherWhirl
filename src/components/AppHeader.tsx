@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Moon, Sun, X, Network, Clock } from 'lucide-react';
+import { Menu, Moon, Sun, X, Network, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import weatherAnimation from '../assets/animations/weather-animation.json';
-import BackgroundColorPicker from './BackgroundColorPicker';
 import { fetchIPInfo } from '../utils/ipInfoService';
 import { useTheme } from './ThemeProvider';
+import { useBackground } from './BackgroundProvider';
 
 interface AppHeaderProps {
   toggleTheme?: () => void;
@@ -17,6 +17,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { resolvedTheme } = useTheme();
+  const { isBlurred } = useBackground();
   const isDark = resolvedTheme === 'dark';
   
   // IP Info state
@@ -82,13 +83,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
     <header className="fixed top-0 left-0 right-0 z-40">
       {/* IP Info Bar */}
       <div className={`w-full py-0.5 px-2 text-xs flex flex-wrap justify-center items-center gap-1 md:gap-2 ${
-        isDark ? 'bg-[#222] text-gray-300' : 'bg-gray-100 text-gray-700'
+        isDark ? 'bg-black/40 backdrop-blur-sm text-gray-100' : 'bg-white/40 backdrop-blur-sm text-gray-800'
       }`}>
-        <div className="flex items-center gap-1 border-r pr-1 border-gray-400">
-          <Clock className="h-2.5 w-2.5" />
-          <span className="text-xs">{formatTime(currentDateTime)} | {formatDate(currentDateTime)}</span>
-        </div>
-        
         <div className={`text-xs font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
           Your ISP and IP:
         </div>
@@ -102,10 +98,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
           <div className="flex flex-wrap items-center gap-1 md:gap-2">
             <div className="flex items-center gap-1">
               <Network className="h-2.5 w-2.5" />
-              <span className="text-xs">IP: {ipInfo.ip}</span>
+              <span className={`text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>IP: {ipInfo.ip}</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-xs">ISP: {ipInfo.isp}</span>
+              <span className={`text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>ISP: {ipInfo.isp}</span>
             </div>
           </div>
         )}
@@ -113,10 +109,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
       
       {/* Main Header */}
       <div className={`${
-        theme === 'dark'
-          ? 'bg-[#111] border-b border-[#222]'
-          : 'bg-white border-b border-[#e5e5e5]'
-      }`}>
+        isDark
+          ? 'bg-black/60 backdrop-blur-md border-b border-white/10'
+          : 'bg-white/60 backdrop-blur-md border-b border-black/10'
+      } transition-all duration-300`}>
         <div className="container mx-auto px-3 max-w-screen-xl">
           <div className="flex items-center justify-between h-12 md:h-16">
             <a href="/" className="flex items-center gap-1 md:gap-2" style={{ cursor: 'pointer' }}>
@@ -127,23 +123,33 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
                   style={{ width: '100%', height: '100%' }}
                 />
               </div>
-              <span className={`text-lg md:text-xl font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+              <span className={`text-lg md:text-xl font-medium uppercase tracking-wider ${isDark ? 'text-white' : 'text-black'}`}>
                 WeatherWhirl
               </span>
             </a>
 
             {/* Desktop Controls */}
             <div className="hidden md:flex items-center gap-3">
-              <BackgroundColorPicker />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/search')}
+                className={`rounded-full bg-white/10 hover:bg-white/20 ${
+                  isDark ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
+                }`}
+              >
+                <Search className="h-4 w-4 mr-1" />
+                <span>Search the Web</span>
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleTheme}
-                className={`rounded-none ${
-                  theme === 'dark' ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
+                className={`rounded-full bg-white/10 hover:bg-white/20 ${
+                  isDark ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
                 }`}
               >
-                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
             </div>
 
@@ -153,8 +159,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
                 variant="ghost"
                 size="icon"
                 onClick={toggleMobileMenu}
-                className={`rounded-none ${
-                  theme === 'dark' ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
+                className={`rounded-full bg-white/10 hover:bg-white/20 ${
+                  isDark ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
                 }`}
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -166,19 +172,31 @@ const AppHeader: React.FC<AppHeaderProps> = ({ toggleTheme, theme = 'light' }) =
           {mobileMenuOpen && (
             <div 
               className={`md:hidden py-3 px-2 ${
-                theme === 'dark' ? 'bg-[#111] border-t border-[#222]' : 'bg-white border-t border-[#e5e5e5]'
+                isDark ? 'bg-black/80 backdrop-blur-md border-t border-white/10' : 'bg-white/80 backdrop-blur-md border-t border-black/10'
               }`}
             >
               <div className="flex flex-col items-center gap-3">
-                <BackgroundColorPicker />
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    navigate('/search');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 ${
+                    isDark ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
+                  }`}
+                >
+                  <Search className="h-4 w-4" />
+                  <span className="text-sm">Search the Web</span>
+                </Button>
                 <Button
                   variant="ghost"
                   onClick={toggleTheme}
-                  className={`flex items-center gap-2 ${
-                    theme === 'dark' ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
+                  className={`flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 ${
+                    isDark ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'
                   }`}
                 >
-                  {theme === 'dark' ? (
+                  {isDark ? (
                     <>
                       <Sun className="h-4 w-4" />
                       <span className="text-sm">Switch to Light Mode</span>

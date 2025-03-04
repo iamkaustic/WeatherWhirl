@@ -62,7 +62,7 @@ const IPInfoBar: React.FC = () => {
 
   return (
     <div className={`w-full py-0.5 px-2 text-xs flex flex-wrap justify-center items-center gap-1 md:gap-2 relative z-50 ${
-      isDark ? 'bg-[#222] text-gray-300' : 'bg-gray-100 text-gray-700'
+      isDark ? 'bg-[#222] text-gray-100' : 'bg-gray-100 text-gray-700'
     }`}>
       <div className="flex items-center gap-1 border-r pr-1 border-gray-400">
         <Clock className="h-2.5 w-2.5" />
@@ -82,10 +82,10 @@ const IPInfoBar: React.FC = () => {
         <div className="flex flex-wrap items-center gap-1 md:gap-2">
           <div className="flex items-center gap-1">
             <Network className="h-2.5 w-2.5" />
-            <span className="text-xs">IP: {ipInfo.ip}</span>
+            <span className={`text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>IP: {ipInfo.ip}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs">ISP: {ipInfo.isp}</span>
+            <span className={`text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>ISP: {ipInfo.isp}</span>
           </div>
         </div>
       )}

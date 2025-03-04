@@ -100,6 +100,24 @@
   @apply bg-white text-[#111] hover:bg-[#e5e5e5];
 }
 
+/* Gradient Animation for Weather Container */
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Glass Card Styling */
+.glass-card {
+  @apply bg-white/40 dark:bg-black/40 backdrop-blur-sm border border-white/20 dark:border-white/10 shadow-lg;
+}
+
 /* Input Styles */
 .adanola-input {
   @apply border-b border-[#111] bg-transparent px-2 py-2 focus:outline-none focus:border-[#555];
@@ -142,11 +160,6 @@
 
 .weather-gradient-stormy {
   @apply bg-gradient-to-br from-gray-500 to-gray-700 text-white;
-}
-
-/* Glass Card Effect */
-.glass-card {
-  @apply backdrop-blur-sm border border-white/20 shadow-sm;
 }
 
 /* Animations */

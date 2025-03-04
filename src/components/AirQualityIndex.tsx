@@ -10,7 +10,7 @@ interface AirQualityIndexProps {
 export const AirQualityIndex: React.FC<AirQualityIndexProps> = ({ airQuality, isLoading = false }) => {
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden h-full">
         <div className="p-3 bg-blue-50 dark:bg-blue-900 border-b border-blue-100 dark:border-blue-800 flex items-center">
           <Wind size={16} className="mr-2 text-blue-600 dark:text-blue-300" />
           <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">Air Quality</h3>
@@ -50,7 +50,7 @@ export const AirQualityIndex: React.FC<AirQualityIndexProps> = ({ airQuality, is
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden h-full">
       <div className="p-3 bg-blue-50 dark:bg-blue-900 border-b border-blue-100 dark:border-blue-800 flex items-center">
         <Wind size={16} className="mr-2 text-blue-600 dark:text-blue-300" />
         <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">Air Quality</h3>
