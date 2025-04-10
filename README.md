@@ -1,3 +1,6 @@
+Live Website - https://weather-whirl.vercel.app/
+Make sure to enable Location visibility to experience full features of the website.
+
 # WeatherWhirl
 
 A modern, responsive weather application that provides real-time weather information and forecasts based on user location or search queries.
